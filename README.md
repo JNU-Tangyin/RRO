@@ -21,3 +21,4 @@ git clone https://github.com/JNU-Tangyin/RRO.git
 ```shell
 python3 main.py
 ```
+3. check the folder for ploting results and latex tables
