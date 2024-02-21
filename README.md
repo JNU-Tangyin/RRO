@@ -12,3 +12,12 @@ Feel free to watch video below:
 
 https://github.com/JNU-Tangyin/RRO/assets/1193630/17ef965e-7bac-4fde-bd6b-8723c4c7d278
 
+## Installation Instruction
+1. download
+```shell
+git clone https://github.com/JNU-Tangyin/RRO.git
+```
+2. cd into the directory, and run
+```shell
+python3 main.py
+```
