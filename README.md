@@ -22,16 +22,7 @@ If you find this repo useful, please cite our paper.
 @inproceedings{tang2024rro,
   title={Regulating the imbalance for the container relocation problem: A deep reinforcement
 learning approach},
-  author={Yin Tang
-, Zengjian Ye
-, Yongjian Chen
-, Wanting Gao
-, Zezheng Li
-, Yan Li
-, Yixuan Xiao
-, Jie Lu
-, Shuqiang Huang
-, Jian Zhang∗},
+  author={Yin Tang, Zengjian Ye, Yongjian Chen, Wanting Gao, Zezheng Li, Yan Li, Yixuan Xiao, Jie Lu, Shuqiang Huang, Jian Zhang∗},
   journal={Computers & Industrial Engineering},
   year={2024},
 }
@@ -46,9 +37,16 @@ If you have any questions or suggestions, feel free to contact:
 - Jian Zhang (jianzhang@scut.edu.cn)
 
 Or describe it in Issues.
+
+## Instruction of use
+1. clone
+
+```shell
+git clone http://github.com/JNU-Tangyin/RRO.git
 ```
 2. cd into the directory, and run
 ```shell
 python3 main.py
 ```
-3. check the folder for ploting results and latex tables
+it will generate result in .csv
+3. check the folder for ploting(.pdf) and latex tables
