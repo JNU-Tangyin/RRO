@@ -31,7 +31,7 @@ learning approach},
 , Yixuan Xiao
 , Jie Lu
 , Shuqiang Huang
-, Jian Zhang,∗},
+, Jian Zhang∗},
   journal={Computers & Industrial Engineering},
   year={2024},
 }
