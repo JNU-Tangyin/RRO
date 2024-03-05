@@ -4,8 +4,9 @@ The main objective of the container relocation problem (CRP) is to retrieve all 
 
 codes to be released soon. 
 
-Feel free to watch video below:
+Feel free to watch video below. Due to privacy reason, entities names are encrypted:
 
+https://github.com/JNU-Tangyin/RRO/assets/1193630/19836b4b-2907-4da5-9e65-bd8d789323bd
 
 
 ## File && Folders
