@@ -8,10 +8,58 @@ Feel free to watch video below:
 
 https://github.com/JNU-Tangyin/RRO/assets/1193630/17ef965e-7bac-4fde-bd6b-8723c4c7d278
 
-## Installation Instruction
-1. download
+## File && Folders
+
+- **datasets** the datasets to train and test. the files in datasets/excel is for prediction stage, the files in datasets/json and datasets/redis is for optimization stage.
+
+- **figures** all images drawn based on the data from the training results.
+
+- **frontend** 3D storage yard front-end engineering project.
+
+- **predict** documents related to stacking days prediction model.
+
+- **results** data output file after training.
+
+- **rl** documents related to container relocation optimization model.
+
+- **main.py** entry file for run program.
+
+- **README.md** introduce how to run this project.
+
+- **requirements.txt** for installation of virtual env
+
+
+## Usage
+1. Clone
 ```shell
 git clone https://github.com/JNU-Tangyin/RRO.git
+```
+
+2. Installation environment dependent software
+- install redis-server 7.0
+- install python3
+- install virtualenv
+```shell
+pip3 install virtualenv venv
+```
+
+3. Install dependencies
+```shell
+virtualenv venv
+pip install -r requirements.txt
+cd frontend
+npm install
+```
+
+4. Prepare data
+- copy datasets/redis/dump.rdb to redis-server folder
+```shell
+redis-server
+```
+
+5. Train and evaluate model, run frontend project.
+```shell
+python3 main.py
 ```
 
 ## Citation
@@ -37,16 +85,3 @@ If you have any questions or suggestions, feel free to contact:
 - Jian Zhang (jianzhang@scut.edu.cn)
 
 Or describe it in Issues.
-
-## Instruction of use
-1. clone
-
-```shell
-git clone http://github.com/JNU-Tangyin/RRO.git
-```
-2. cd into the directory, and run
-```shell
-python3 main.py
-```
-it will generate result in .csv
-3. check the folder for ploting(.pdf) and latex tables
