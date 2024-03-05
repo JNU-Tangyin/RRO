@@ -33,7 +33,7 @@ https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d63
 - **requirements.txt** for installation of virtual env
 
 
-## Usage
+## Getting started
 1. Clone
 ```shell
 git clone https://github.com/JNU-Tangyin/RRO.git
