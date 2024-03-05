@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
-from plotnine import ggplot, aes, geom_line, geom_ribbon, theme_minimal, ggtitle, labs, stat_smooth
+from plotnine import *  # ggplot, aes, geom_line, geom_ribbon, theme_minimal, ggtitle, labs, stat_smooth
 from plotnine_prism import theme_prism
 import json
 
+
+npg = ["#E64B35CC","#4DBBD5CC","#00A087CC", "#3C5488CC", "#F39B7FCC", "#8491B4CC", "#91D1c2CC","#DC0000CC", "#7E6148CC"]
 plot_list = [
     {
         'path': '../results/rl/ppo_wp_v4_train_game_status_list_202403031739_{}.txt',
@@ -114,19 +116,23 @@ plot = (ggplot()
         + geom_line(final_detail_df, aes(x='episode', y='mean detail', color='algorithm', fill='algorithm'))
         + labs(x='Episode', y='#Relocation')
         + geom_ribbon(final_detail_df,
-                      aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'), alpha=0.2)
-        + theme_prism()
+                aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'), alpha=0.2)
+                # + scale_fill_manual(values=npg)
+                # + scale_color_manual(values=npg)
+                + theme_prism()
         )
 
 plot_huge_car = (ggplot()
-                 + geom_line(final_detail_huge_car_df, aes(x='episode', y='mean detail', color='algorithm', fill='algorithm'))
-                 + labs(x='Episode', y='#Crane movement distance')
-                 + geom_ribbon(final_detail_huge_car_df,
-                               aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'),
-                               alpha=0.2)
-                 + theme_prism()
-                 )
+                + geom_line(final_detail_huge_car_df, aes(x='episode', y='mean detail', color='algorithm', fill='algorithm'))
+                + labs(x='Episode', y='#Crane movement distance')
+                + geom_ribbon(final_detail_huge_car_df,
+                            aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'),
+                            alpha=0.2)
+                # + scale_fill_manual(values=npg)
+                # + scale_color_manual(values=npg)
+                + theme_prism()
+                )
 
 
-plot.save('../figures/rl/ppo_v4_reload_count.png')
-plot_huge_car.save('../figures/rl/ppo_v4_crane_movement_distance.png')
+plot.save('../figures/rl/ppo_v4_reload_count.pdf')
+plot_huge_car.save('../figures/rl/ppo_v4_crane_movement_distance.pdf')
