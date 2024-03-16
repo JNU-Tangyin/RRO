@@ -1,5 +1,3 @@
-from abc import ABC
-
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
@@ -14,13 +12,16 @@ import json
 
 
 class DockerYard(gym.Env):
-    def __init__(self):
+    def __init__(self, train_type=4, with_predict=True, algorithm='ppo'):
         super(DockerYard, self).__init__()
         self.docker_game = None
         self.block = '01'
         self.yard_width = 16
         self.yard_height = 15
         self.yard_depth = 4
+        self.train_type = train_type
+        self.with_predict = with_predict
+        self.algorithm = algorithm
 
         self.action_map = {}
         self.observation_list = []
@@ -63,9 +64,7 @@ class DockerYard(gym.Env):
             # reload times
             'REPLACE_TIMES': 19,
             # operation type
-            'OPERATION_TYPE': 20,
-            # wrong times
-            'WRONG_TIMES': 21
+            'OPERATION_TYPE': 20
         }
 
         self.success_times = 0
@@ -75,7 +74,7 @@ class DockerYard(gym.Env):
         self.total_reward_list = []
         self.total_detail_list = []
         self.total_wrong_times_list = []
-        self.able_wrong_times = 500
+        self.able_wrong_times = 300
         self.action_space = None
         self.observation_space = None
         self.create_game()
@@ -85,8 +84,10 @@ class DockerYard(gym.Env):
         np.random.seed(seed)
 
     def create_game(self):
+        self.total_wrong_time = 0
         docker_game_options = docker.DockerGameOptions(self.block, self.yard_width, self.yard_height,
-                                                       self.yard_depth, train_type=4, with_predict=False)
+                                                       self.yard_depth, train_type=self.train_type,
+                                                       with_predict=self.with_predict)
         self.docker_game = docker.DockerGame(docker_game_options)
         self.docker_game.create_game()
         self.action_map = self.docker_game.get_action_space()
@@ -96,11 +97,11 @@ class DockerYard(gym.Env):
         if self.docker_game.options.with_predict:
             min_row = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -200, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
             max_row = [3, 15, 4, 1, 1, 1, 1, 1, 1, 200, 200, 200, len(self.docker_game.cache_bill_map.keys()),
-                       len(self.docker_game.cache_consignor_map.keys()), 40, 1, 1, 1, 1, 50, 2, self.able_wrong_times]
+                       len(self.docker_game.cache_consignor_map.keys()), 40, 1, 1, 1, 1, 50, 3, self.able_wrong_times]
         else:
             min_row = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
             max_row = [3, 15, 4, 1, 1, 1, 1, 1, 1, 200, len(self.docker_game.cache_bill_map.keys()),
-                       len(self.docker_game.cache_consignor_map.keys()), 40, 1, 1, 1, 1, 50, 2, self.able_wrong_times]
+                       len(self.docker_game.cache_consignor_map.keys()), 40, 1, 1, 1, 1, 50, 3, self.able_wrong_times]
         self.observation_space = spaces.Box(
             low=np.float32([min_row for _ in range(len(self.observation_list))]),
             high=np.float32([max_row for _ in range(len(self.observation_list))])
@@ -128,7 +129,8 @@ class DockerYard(gym.Env):
         terminated = False
         truncated = False
         if len(self.docker_game.operation_list) > 0:
-            if (action[0] != 0 and action[1] != 0 and action[-1] != 0) or (action[0] == 0 and action[1] == 0 and action[-1] == 2):
+            if (action[0] != 0 and action[1] != 0 and action[-1] != 0) or (
+                    action[0] == 0 and action[1] == 0 and action[-1] == 2):
                 action_operation_type = action[-1]
                 if self.docker_game.options.with_predict:
                     current_operation_type = current_operation_status[self.observation_map_item_map['OPERATION_TYPE']]
@@ -146,10 +148,7 @@ class DockerYard(gym.Env):
                         c_stack = f'{self.docker_game.options.block}{utils.to_double(container_bay)}{utils.to_double(container_row)}'
                         c_stack_obj = self.docker_game.yard_stack_map[c_stack]
                         able_tier = c_stack_obj['NUMS'] + 1
-                        if current_container_size == 40:
-                            action_pile = f'{self.docker_game.options.block}{utils.to_double(container_bay + 1)}{utils.to_double(container_row)}{able_tier}'
-                        else:
-                            action_pile = f'{self.docker_game.options.block}{utils.to_double(container_bay)}{utils.to_double(container_row)}{able_tier}'
+                        action_pile = f'{self.docker_game.options.block}{utils.to_double(container_bay)}{utils.to_double(container_row)}{able_tier}'
                         able_pile_list = self.docker_game.get_able_pile_list()
                         if len(able_pile_list) > 0:
                             if action_pile in able_pile_list:
@@ -184,9 +183,10 @@ class DockerYard(gym.Env):
             self.success_times += 1
             step_reward = action_info[2]
 
-        self.total_reward += step_reward
         if self.wrong_times >= self.able_wrong_times:
             terminated = True
+            step_reward -= self.docker_game.reward_map['finish']
+            self.total_wrong_times_list.append(self.total_wrong_time)
         if self.docker_game.game_over:
             truncated = True
         if current_observation is None:
@@ -194,6 +194,7 @@ class DockerYard(gym.Env):
         else:
             self.observation_list = current_observation
         current_observation[-1][-1] = self.wrong_times
+        self.total_reward += step_reward
         if terminated or truncated:
             self.total_reward_list.append(self.total_reward)
             self.total_detail_list.append(self.docker_game.get_cur_info())
@@ -202,7 +203,10 @@ class DockerYard(gym.Env):
     def save_status(self, fidx):
         current_date_time = datetime.now()
         current_date_time_str = current_date_time.strftime("%Y%m%d%H%M")
-        status_file_name = '../results/rl/train_game_status_list_{}_{}.txt'.format(current_date_time_str, fidx)
+        status_file_name = '../results/{}_{}p_v{}_train_game_status_list_{}_{}.txt'.format(self.algorithm,
+                                                                                           'w' if self.with_predict else 'wo',
+                                                                                           self.train_type,
+                                                                                           current_date_time_str, fidx)
         file = open(status_file_name, 'w')
         file.write(json.dumps({
             'total_reward_list': self.total_reward_list,
@@ -211,9 +215,9 @@ class DockerYard(gym.Env):
         file.close()
 
 
-def make_env():
+def make_env(train_type=4, with_predict=True, algorithm='ppo'):
     def _init():
-        env = DockerYard()
+        env = DockerYard(train_type=train_type, with_predict=with_predict, algorithm=algorithm)
         env = Monitor(env)
         return env
 
@@ -221,11 +225,67 @@ def make_env():
 
 
 if __name__ == '__main__':
-    vec_env = DummyVecEnv([make_env() for _ in range(4)])
-    model = PPO('MlpPolicy', vec_env, verbose=1, device='cuda', gamma=0.99, ent_coef=0.005)
-    model.learn(total_timesteps=5000000, log_interval=100)
+    train_list = [
+        {
+            'train_type': 4,
+            'with_predict': True,
+            'algorithm': {
+                'name': 'ppo',
+                'method': PPO
+            }
+        },
+        {
+            'train_type': 3,
+            'with_predict': True,
+            'algorithm': {
+                'name': 'ppo',
+                'method': PPO
+            }
+        },
+        {
+            'train_type': 2,
+            'with_predict': True,
+            'algorithm': {
+                'name': 'ppo',
+                'method': PPO
+            }
+        },
+        {
+            'train_type': 1,
+            'with_predict': True,
+            'algorithm': {
+                'name': 'ppo',
+                'method': PPO
+            }
+        },
+        {
+            'train_type': 4,
+            'with_predict': False,
+            'algorithm': {
+                'name': 'ppo',
+                'method': PPO
+            }
+        },
+        {
+            'train_type': 4,
+            'with_predict': True,
+            'algorithm': {
+                'name': 'a2c',
+                'method': A2C
+            }
+        }
+    ]
 
-    model.save('./model/train.pkl')
+    for train_item in train_list:
+        vec_env = DummyVecEnv(
+            [make_env(train_type=train_item['train_type'], with_predict=train_item['with_predict'],
+                      algorithm=train_item['algorithm']['name']) for _ in range(4)])
+        model = train_item['algorithm']['method']('MlpPolicy', vec_env, verbose=1, device='cuda', gamma=0.99,
+                                                  ent_coef=0.01)
+        model.learn(total_timesteps=1000000, log_interval=100)
 
-    for env_idx, c_vec_env in enumerate(vec_env.envs):
-        c_vec_env.save_status(env_idx)
+        model.save('./model/{}_{}p_v{}_train.pkl'.format(train_item['algorithm']['name'],
+                   'w' if train_item['with_predict'] else 'wo', train_item['train_type']))
+
+        for env_idx, c_vec_env in enumerate(vec_env.envs):
+            c_vec_env.save_status(env_idx)

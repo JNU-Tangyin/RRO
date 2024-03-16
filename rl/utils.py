@@ -8,6 +8,8 @@ import re
 from zhconv import convert
 from collections import defaultdict
 import numpy as np
+from cachetools import Cache, LRUCache
+import dill as pickle
 
 
 class IntEncoder(json.JSONEncoder):
@@ -24,6 +26,23 @@ class DateEncoder(json.JSONEncoder):
             return obj.strftime("%Y-%m-%d %H:%M:%S")
         else:
             return json.JSONEncoder.default(self, obj)
+
+
+def repair_game():
+    with open('./cache_status/container_status.pickle', 'rb') as f:
+        repair_docker_game = pickle.load(f)
+        f.close()
+    return repair_docker_game['game']
+
+
+def cache_game(game):
+    cache_docker_game = LRUCache(maxsize=3)
+    cache_docker_game['game'] = game
+    game.is_progress = False
+    game.progress_bar = None
+    with open('./cache_status/container_status.pickle', 'wb') as f:
+        pickle.dump(cache_docker_game, f)
+        f.close()
 
 
 def get_redis():
@@ -102,15 +121,6 @@ def get_pile_split(pile_place):
     return container_bay, container_row, container_layer, container_block
 
 
-def query_db(query, args=(), one=False):
-    cur = database().cursor()
-    cur.execute(query, args)
-    r = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in cur.fetchall()]
-    cur.connection.close()
-    tem_result = (r[0] if r else None) if one else r
-    return json.dumps(tem_result, cls=DateEncoder, ensure_ascii=False)
-
-
 class Color(Enum):
     BLACK = 30
     RED = 31
@@ -127,37 +137,57 @@ def print_color(text: str, fg: Color = Color.BLACK.value):
     return
 
 
-def count_dist_by_pile_place(start, end, op_type, options):
+def count_bay_diff(start_bay, end_bay):
+    count_diff = math.fabs((start_bay - end_bay) / 2)
+    return count_diff
+
+
+def count_dist_by_pile_place(start, cur, end, op_type, options):
+    cur_bay = None
+    cur_row = None
+    cur_layer = None
     start_bay, start_row, start_layer, _ = get_pile_split(start)
+    if cur is not None:
+        cur_bay, cur_row, cur_layer, _ = get_pile_split(cur)
     end_bay, end_row, end_layer, _ = get_pile_split(end)
     mini_car_dist = 0
     huge_car_dist = 0
+    raise_dist = 0
     final_pile = None
     if op_type == 'enter':
-        if end_row < (options.yard_height / 2):
-            mini_car_dist += (end_row - 1)
-            final_pile = f'''{options.block}{to_double(end_bay)}{to_double(1)}'''
-        else:
-            mini_car_dist += (options.yard_height - end_row)
-            final_pile = f'''{options.block}{to_double(end_bay)}{to_double(options.yard_height)}'''
-        huge_car_dist = math.fabs((start_bay - end_bay) / 2)
+        huge_car_dist = count_bay_diff(start_bay, end_bay)
+        mini_car_dist += (end_row - 1)
         mini_car_dist += math.fabs(start_row - end_row)
+        raise_dist = start_layer - end_layer
+        final_pile = f'''{options.block}{to_double(end_bay)}{to_double(1)}4'''
     elif op_type == 'move':
-        huge_car_dist = math.fabs((start_bay - end_bay) / 2)
-        mini_car_dist = math.fabs(start_row - end_row)
-        final_pile = end
+        # 从当前机械位置到当前箱为止
+        huge_car_dist = count_bay_diff(start_bay, cur_bay)
+        mini_car_dist = math.fabs(start_row - cur_row)
+        # 从当前箱为止到目标落位
+        huge_car_dist += count_bay_diff(cur_bay, end_bay)
+        mini_car_dist += math.fabs(cur_row - end_row)
+        raise_dist = (start_layer - cur_layer) + (start_layer - end_layer)
+        final_pile = f'''{end[0:6]}4'''
     elif op_type == 'leave':
-        huge_car_dist = math.fabs((start_bay - end_bay) / 2)
+        huge_car_dist = count_bay_diff(start_bay, end_bay)
         mini_car_dist = math.fabs(start_row - end_row)
-        if end_row < (options.yard_height / 2):
-            mini_car_dist += (end_row - 1)
-            final_pile = f'''{options.block}{to_double(end_bay)}{to_double(1)}'''
-        else:
-            mini_car_dist += (options.yard_height - end_row)
-            final_pile = f'''{options.block}{to_double(end_bay)}{to_double(options.yard_height)}'''
-    return final_pile, huge_car_dist, mini_car_dist
+        mini_car_dist += (end_row - 1)
+        raise_dist = start_layer - end_layer
+        final_pile = f'''{options.block}{to_double(end_bay)}{to_double(1)}4'''
+    return final_pile, huge_car_dist, mini_car_dist, raise_dist
 
 
 def get_forty_size_stack(pile_place):
     pile_bay, pile_row, pile_layer, pile_block = get_pile_split(pile_place)
     return f'{pile_block}{to_double(pile_bay - 1)}{to_double(pile_row)}'
+
+
+def save_redis_to_json():
+    r = get_redis()
+    keys = r.keys()
+    json_data = {}
+    for key in keys:
+        value = r.get(key)
+        json_data[key] = value
+    save_json(json_data, 'redis_cache.json')

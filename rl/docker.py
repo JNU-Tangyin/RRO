@@ -1,7 +1,7 @@
 import utils
 import json
-import datetime
 import joblib
+import datetime
 import pandas as pd
 import numpy as np
 from random import choice
@@ -67,7 +67,7 @@ class DockerGame:
         # operation waiting list
         self.operation_list = []
         # machine position after last operation
-        self.mc_last_position = None
+        self.mc_last_position = f'{self.options.block}01011'
         # disable stack
         self.disable_stack = None
         # svr predict map
@@ -94,6 +94,7 @@ class DockerGame:
         self.used_rate = 0
         # reward list
         self.reward_list = []
+        self.part_reward_list = []
         # action history
         self.action_list = []
         # total reward (equals sum of reward list)
@@ -107,30 +108,29 @@ class DockerGame:
         # reward map
         self.reward_map = {
             'finish': 99999,
+            'early_finish': 99999,
             'zero_cover_num': 2,
             'replace_times_num': 2,
-            'huge_car': 17.6,
-            'min_car': 2.4,
-            'cover_predict': 1,
-            'cover_expire': 2,
+            'huge_car': 22,
+            'min_car': 3,
+            'cover_expire': 1,
             'long_day': 6,
             'mix_score': 6,
             'same_bill_lading': 4,
             'same_party': 4,
-            'bind_container': 3,
-            'book_container': 3,
-            'used_container': 3,
-            'check_container': 3,
-            'block_container': 3,
-            'relocation_times': 40,
-            'twice_relocation_times': 5,
-            'assign_container': 1,
-            'leave_success': 600,
-            'enter_success': 600
+            'bind_container': 4,
+            'book_container': 4,
+            'used_container': 4,
+            'check_container': 4,
+            'block_container': 4,
+            'relocation_times': 200,
+            'twice_relocation_times': 2,
+            'assign_container': 4,
+            'leave_success': 800,
+            'enter_success': 800
         }
 
-        # redis for cache
-        self.redis = None
+        self.cache_main_data = utils.read_json('../datasets/json/cache_main_data.json')
 
     # update current time after each operation
     def update_current_time(self, ct):
@@ -151,10 +151,10 @@ class DockerGame:
         self.predict_container()
         self.create_yard()
         self.update_container_status()
+        self.operation_list = self.operation_list[0:500]
+        print(f'Create game success, current time: {self.current_time}, operation length: {len(self.operation_list)}')
         if self.is_progress:
             self.progress_bar = tqdm()
-            print(
-                f'Create game success, current time: {self.current_time}, operation length: {len(self.operation_list)}')
             self.progress_bar.total = len(self.operation_list)
 
     def add_process_total(self, total):
@@ -204,8 +204,8 @@ class DockerGame:
             'containerRefIds': ref_id_list
         })
         cache_key = f'''pc_{cache_key}'''
-        result = self.redis.get(cache_key)
-        final_result = json.loads(result)
+        final_result = self.cache_main_data[cache_key]
+        final_result = json.loads(final_result)
 
         current_pd = pd.DataFrame(final_result)
         current_pd['UNLOAD_SORT'] = list(range(0, len(final_result)))
@@ -231,22 +231,22 @@ class DockerGame:
                 operation['PRE_DATE'] = (datetime.datetime.strptime(operation['IN_DATE'],
                                                                     '%Y-%m-%d %H:%M:%S') + datetime.timedelta(
                     days=operation['PRE_DIFF'])).strftime('%Y-%m-%d %H:%M:%S')
-        return result
 
     # update predict data when current time change
     def update_yard_container_predict(self):
         for ref_id in self.current_container_map:
             current_container = self.current_container_map[ref_id]
             if ref_id in self.pred_map:
-                current_container['PRE_DATE'] = (datetime.datetime.strptime(current_container['IN_DATE'],
-                                                                            '%Y-%m-%d %H:%M:%S') + datetime.timedelta(
-                    days=self.pred_map[ref_id])).strftime('%Y-%m-%d %H:%M:%S')
+                if self.options.with_predict:
+                    current_container['PRE_DATE'] = (datetime.datetime.strptime(current_container['IN_DATE'],
+                                                                                '%Y-%m-%d %H:%M:%S') + datetime.timedelta(
+                        days=self.pred_map[ref_id])).strftime('%Y-%m-%d %H:%M:%S')
+                    current_container['REMAIN_DIFF'] = (datetime.datetime.strptime(
+                        current_container['PRE_DATE'], '%Y-%m-%d %H:%M:%S') - datetime.datetime.strptime(
+                        self.current_time, '%Y-%m-%d %H:%M:%S')).total_seconds() / 60 / 60 / 24
                 current_container['REAL_DIFF'] = (datetime.datetime.strptime(
                     self.current_time, '%Y-%m-%d %H:%M:%S') - datetime.datetime.strptime(
                     current_container['IN_DATE'], '%Y-%m-%d %H:%M:%S')).total_seconds() / 60 / 60 / 24
-                current_container['REMAIN_DIFF'] = (datetime.datetime.strptime(
-                    current_container['PRE_DATE'], '%Y-%m-%d %H:%M:%S') - datetime.datetime.strptime(
-                    self.current_time, '%Y-%m-%d %H:%M:%S')).total_seconds() / 60 / 60 / 24
             else:
                 current_container['REAL_DIFF'] = (datetime.datetime.strptime(
                     self.current_time, '%Y-%m-%d %H:%M:%S') - datetime.datetime.strptime(
@@ -297,43 +297,44 @@ class DockerGame:
             self.enter_count,
             self.huge_car_dist,
             self.mini_car_dist,
-            self.action_list
+            self.action_list,
+            self.part_reward_list
         ]
 
     # get action space
     def get_action_space(self):
-        stack_map = {}
-        for i in range(1, self.options.yard_width * 2, 1):
-            if i % 2 == 0:
-                continue
+        pile_place_map = {}
+        for i in range(1, self.options.yard_width * 2, 2):
             for j in range(1, self.options.yard_height + 1):
                 # 1 for enter
-                stack_map[len(stack_map.keys())] = [i, j, 1]
+                pile_place_map[len(pile_place_map.keys())] = [i, j, 1]
                 # 3 for reload/move
-                stack_map[len(stack_map.keys())] = [i, j, 3]
-        stack_map[len(stack_map.keys())] = [0, 0, 2]
-        return stack_map
+                pile_place_map[len(pile_place_map.keys())] = [i, j, 3]
+        pile_place_map[len(pile_place_map.keys())] = [0, 0, 2]
+        return pile_place_map
 
     def get_observation_space(self):
         #  generate observation space
-        stack_map = {}
-        for i in range(1, self.options.yard_width * 2, 1):
+        pile_place_map = {}
+        for i in range(1, self.options.yard_width * 2, 2):
             for j in range(1, self.options.yard_height + 1):
                 for k in range(1, self.options.yard_depth + 1):
                     stack_code = f'''{self.options.block}{utils.to_double(i)}{utils.to_double(j)}{k}'''
                     if self.options.with_predict:
-                        stack_map[stack_code] = [i, j, k] + [-1] * 19
+                        pile_place_map[stack_code] = [i, j, k] + [-1] * 19
                     else:
-                        stack_map[stack_code] = [i, j, k] + [-1] * 17
+                        pile_place_map[stack_code] = [i, j, k] + [-1] * 17
         observation_space = []
         for ref_id in self.current_container_map:
             container = self.current_container_map[ref_id]
-            if container['PILE_PLACE'] in stack_map:
-                container_bay, container_row, container_tier, _ = utils.get_pile_split(container['PILE_PLACE'])
+            container_bay, container_row, container_tier, _ = utils.get_pile_split(container['START_PILE_PLACE'])
+            if container['START_PILE_PLACE'] in pile_place_map:
                 attr_item = self.get_rl_status_by_container(container)
-            stack_map[container['PILE_PLACE']] = [container_bay, container_row, container_tier] + attr_item + [0, 0]
-        for key in stack_map:
-            observation_space.append(stack_map[key])
+                pile_place_map[container['START_PILE_PLACE']] = [container_bay, container_row, container_tier] + attr_item + [0, 0]
+            else:
+                print('Error: ', container['START_PILE_PLACE'], ' not in pile place map')
+        for key in pile_place_map:
+            observation_space.append(pile_place_map[key])
         if len(self.operation_list) == 0:
             if self.options.with_predict:
                 current_operation = [-1] * 22
@@ -347,11 +348,11 @@ class DockerGame:
                 observation_space.append([0, 0, 0] + current_attr_item + [1, 0])
             elif current_operation['ACTION'] == 'leave':
                 container_bay, container_row, container_tier, _ = utils.get_pile_split(
-                    self.current_container_map[current_operation['CONTAINER_REF_ID']]['PILE_PLACE'])
+                    self.current_container_map[current_operation['CONTAINER_REF_ID']]['START_PILE_PLACE'])
                 observation_space.append([container_bay, container_row, container_tier] + current_attr_item + [2, 0])
             elif current_operation['ACTION'] == 'move':
                 container_bay, container_row, container_tier, _ = utils.get_pile_split(
-                    self.current_container_map[current_operation['CONTAINER_REF_ID']]['PILE_PLACE'])
+                    self.current_container_map[current_operation['CONTAINER_REF_ID']]['START_PILE_PLACE'])
                 observation_space.append([container_bay, container_row, container_tier] + current_attr_item + [3, 0])
         return observation_space
 
@@ -518,10 +519,7 @@ class DockerGame:
             if disable_stack is not None and disable_stack == current_stack['PILE_PLACE']:
                 able_pile = None
             else:
-                if current_container['CONTAINER_SIZE'] == 20:
-                    able_pile = f'{self.options.block}{utils.to_double(stack_bay)}{utils.to_double(stack_row)}{current_stack["NUMS"] + 1}'
-                else:
-                    able_pile = f'{self.options.block}{utils.to_double(stack_bay + 1)}{utils.to_double(stack_row)}{current_stack["NUMS"] + 1}'
+                able_pile = f'{self.options.block}{utils.to_double(stack_bay)}{utils.to_double(stack_row)}{current_stack["NUMS"] + 1}'
         return able_pile
 
     @staticmethod
@@ -554,7 +552,8 @@ class DockerGame:
                     self.action_list.append([None, input_pile_place])
                     self.enter_count += 1
 
-                    final_pile, huge_car_dist, mini_car_dist = utils.count_dist_by_pile_place(self.mc_last_position,
+                    final_pile, huge_car_dist, mini_car_dist, _ = utils.count_dist_by_pile_place(self.mc_last_position,
+                                                                                              None,
                                                                                               input_pile_place,
                                                                                               current_operation[
                                                                                                   'ACTION'],
@@ -589,12 +588,13 @@ class DockerGame:
                 container_bay, container_row, container_tier, _ = utils.get_pile_split(current_container['PILE_PLACE'])
                 self.del_container(self.disable_stack, current_container['CONTAINER_REF_ID'], container_tier)
 
-                # from last mc position to the current container position
-                final_pile, huge_car_dist, mini_car_dist = utils.count_dist_by_pile_place(self.mc_last_position,
-                                                                                          current_container[
-                                                                                              'PILE_PLACE'],
-                                                                                          current_operation['ACTION'],
-                                                                                          self.options)
+                final_pile, huge_car_dist, mini_car_dist, _ = utils.count_dist_by_pile_place(
+                    self.mc_last_position,
+                    current_container[
+                        'PILE_PLACE'],
+                    input_pile_place,
+                    current_operation['ACTION'], self.options)
+
                 self.mc_last_position = final_pile
                 self.huge_car_dist += huge_car_dist
                 self.mini_car_dist += mini_car_dist
@@ -608,23 +608,6 @@ class DockerGame:
 
                 self.enter_container(input_pile_place)
 
-                # from the current container position to the target mc position
-                final_pile, huge_car_dist, mini_car_dist = utils.count_dist_by_pile_place(self.mc_last_position,
-                                                                                          input_pile_place,
-                                                                                          current_operation['ACTION'],
-                                                                                          self.options)
-                self.mc_last_position = final_pile
-                self.huge_car_dist += huge_car_dist
-                self.mini_car_dist += mini_car_dist
-
-                step_score += self.count_reward('move_enter', {
-                    'HUGE_CAR_DIST': huge_car_dist,
-                    'MINI_CAR_DIST': mini_car_dist,
-                    'INPUT_PILE_PLACE': input_pile_place,
-                    'CONTAINER_SIZE': current_operation['CONTAINER_SIZE'],
-                    'ACTION': current_operation['ACTION']
-                })
-
                 self.action_list.append([current_container['PILE_PLACE'], input_pile_place])
                 if self.is_progress:
                     self.update_process()
@@ -635,19 +618,15 @@ class DockerGame:
             self.disable_stack = None
             current_container = self.current_container_map[current_operation['CONTAINER_REF_ID']]
             container_bay, container_row, container_tier, _ = utils.get_pile_split(current_container['PILE_PLACE'])
-            if container_size == 20:
-                current_stack = f'''{self.options.block}{utils.to_double(container_bay)}{utils.to_double(
-                    container_row)}'''
-            else:
-                current_stack = f'''{self.options.block}{utils.to_double(container_bay - 1)}{utils.to_double(
-                    container_row)}'''
+            current_stack = current_container['START_PILE_PLACE'][0:6]
             current_stack_containers = self.yard_stack_map[current_stack]['CONTAINER_LIST']
             if self.yard_stack_map[current_stack]['NUMS'] == container_tier:
                 self.del_container(current_stack, current_container['CONTAINER_REF_ID'], container_tier)
                 self.action_list.append([current_container['PILE_PLACE'], None])
                 self.leave_count += 1
 
-                final_pile, huge_car_dist, mini_car_dist = utils.count_dist_by_pile_place(self.mc_last_position,
+                final_pile, huge_car_dist, mini_car_dist, _ = utils.count_dist_by_pile_place(self.mc_last_position,
+                                                                                          None,
                                                                                           current_container[
                                                                                               'PILE_PLACE'],
                                                                                           current_operation['ACTION'],
@@ -667,12 +646,7 @@ class DockerGame:
                 return True, 'leave', step_score, None, None, None
             else:
                 # get block container list
-                if container_size == 20:
-                    self.disable_stack = f'''{self.options.block}{utils.to_double(container_bay)}{utils.to_double(
-                        container_row)}'''
-                else:
-                    self.disable_stack = f'''{self.options.block}{utils.to_double(container_bay - 1)}{utils.to_double(
-                        container_row)}'''
+                self.disable_stack = current_stack
                 # insert an empty record to solve the recursion problem
                 able_pile_place = self.get_able_pile_list()
                 self.operation_list.insert(0, {})
@@ -706,16 +680,18 @@ class DockerGame:
     # when container enter, then add the container to the stack
     def enter_container(self, input_pile_place):
         current_operation = self.operation_list[0]
-        current_operation['PILE_PLACE'] = input_pile_place
+        pile_bay, pile_row, pile_layer, pile_block = utils.get_pile_split(input_pile_place)
+        if current_operation['CONTAINER_SIZE'] != 20:
+            current_operation['PILE_PLACE'] = f'{pile_block}{utils.to_double(pile_bay + 1)}{utils.to_double(pile_row)}{pile_layer}'
+        else:
+            current_operation['PILE_PLACE'] = input_pile_place
+        current_operation['START_PILE_PLACE'] = input_pile_place
+        current_operation['END_PILE_PLACE'] = f'{pile_block}{utils.to_double(pile_bay + 2)}{utils.to_double(pile_row)}{pile_layer}'
         self.current_container_map[current_operation['CONTAINER_REF_ID']] = current_operation
         _, _, container_tier, _ = utils.get_pile_split(
             input_pile_place)
-        if current_operation['CONTAINER_SIZE'] == 20:
-            final_stack = input_pile_place[0:6]
-            self.yard_stack_map[final_stack]['CONTAINER_LIST'][container_tier - 1] = current_operation
-        elif current_operation['CONTAINER_SIZE'] == 40:
-            final_stack = utils.get_forty_size_stack(input_pile_place)
-            self.yard_stack_map[final_stack]['CONTAINER_LIST'][container_tier - 1] = current_operation
+        final_stack = input_pile_place[0:6]
+        self.yard_stack_map[final_stack]['CONTAINER_LIST'][container_tier - 1] = current_operation
 
     def get_reward_r0(self, score_type, score_options=None):
         step_reward = 0
@@ -743,9 +719,8 @@ class DockerGame:
         if score_type in ['enter', 'leave', 'move_leave', 'move_enter']:
             max_w_step = self.options.yard_width - 1
             max_h_step = self.options.yard_height - 1
-            current_score += -self.reward_map['huge_car'] * score_options['HUGE_CAR_DIST']
-            current_score += -self.reward_map['min_car'] * score_options['MINI_CAR_DIST']
-            '''
+            # current_score += -self.reward_map['huge_car'] * score_options['HUGE_CAR_DIST']
+            # current_score += -self.reward_map['min_car'] * score_options['MINI_CAR_DIST']
             if score_options['HUGE_CAR_DIST'] < max_w_step / 4:
                 current_score = self.reward_map['huge_car'] * (max_w_step - score_options['HUGE_CAR_DIST'])
             else:
@@ -754,7 +729,6 @@ class DockerGame:
                 current_score += self.reward_map['min_car'] * (max_w_step - score_options['MINI_CAR_DIST'])
             else:
                 current_score += -self.reward_map['min_car'] * score_options['MINI_CAR_DIST']
-            '''
             if score_type == 'move_leave' or score_type == 'move_enter':
                 if current_score > 0:
                     current_score = -current_score
@@ -772,10 +746,7 @@ class DockerGame:
             current_score = self.reward_map['zero_cover_num'] - cover_num
             if 'CONTAINER_SIZE' in score_options:
                 current_stack = None
-                if score_options['CONTAINER_SIZE'] == 20:
-                    current_stack = score_options['INPUT_PILE_PLACE'][0:6]
-                elif score_options['CONTAINER_SIZE'] == 40:
-                    current_stack = utils.get_forty_size_stack(score_options['INPUT_PILE_PLACE'])
+                current_stack = score_options['INPUT_PILE_PLACE'][0:6]
                 target_stack = self.yard_stack_map[current_stack]
                 target_container_list = target_stack['CONTAINER_LIST']
                 if len(target_container_list) - target_container_list.count(None) > 1:
@@ -797,14 +768,13 @@ class DockerGame:
                                 current_score += self.reward_map['cover_expire']
                             elif expire_diff == 'N':
                                 current_score += -self.reward_map['cover_expire']
+                    seven_diff = 7 - target_container['REAL_DIFF']
+                    if seven_diff > 0:
+                        current_score += -target_container['REAL_DIFF']
+                    elif target_container['REAL_DIFF'] > 14:
+                        current_score += self.reward_map['long_day'] * 2
                     else:
-                        seven_diff = 7 - target_container['REAL_DIFF']
-                        if seven_diff > 0:
-                            current_score += -target_container['REAL_DIFF']
-                        elif target_container['REAL_DIFF'] > 14:
-                            current_score += self.reward_map['long_day'] * 2
-                        else:
-                            current_score += self.reward_map['long_day']
+                        current_score += self.reward_map['long_day']
                     if target_stack['IMPORT_OR_EXPORT'] != current_container['IMPORT_OR_EXPORT']:
                         current_score += -self.reward_map['mix_score']
                     else:
@@ -876,6 +846,7 @@ class DockerGame:
         r1 = self.get_reward_r1(score_type, score_options)
         r2 = self.get_reward_r2(score_type, score_options)
         r3 = self.get_reward_r3(score_type, score_options)
+        # print(r0, r1, r2, r3)
         if self.options.train_type == 1:
             # only consider reload times and twice reload times
             step_reward += r0 + r1
@@ -889,15 +860,16 @@ class DockerGame:
             step_reward += r0 + r1 + r2 + r3
         # print(score_type, r0, r1, r2, r3, step_reward)
         self.reward_list.append(step_reward)
+        self.part_reward_list.append([r0, r1, r2, r3])
         self.total_reward += step_reward
         return step_reward
 
     def close(self):
         self.game_over = True
+        print(f'Game over, current time: {self.current_time}, operation length: {len(self.operation_list)}')
         return 0
 
     def reset(self):
-        self.is_progress = True
         self.progress_bar = None
         if self.is_progress:
             self.progress_bar = None
@@ -910,7 +882,6 @@ class DockerGame:
         self.container_bill_map = {}
         self.current_time = None
         self.operation_list = []
-        self.mc_last_position = None
         self.disable_stack = None
         self.action_list = []
         self.pred_map = {}
@@ -925,11 +896,10 @@ class DockerGame:
         self.mini_car_dist = 0
         self.used_rate = 0
         self.reward_list = []
+        self.part_reward_list = []
         self.total_reward = 0
         self.game_over = False
 
-        self.redis = utils.get_redis()
-        self.mc_last_position = f'{self.options.block}0101'
         self.update_current_time(self.options.init_time)
 
     def check_if_had_hang_up_container(self):
@@ -955,12 +925,8 @@ class DockerGame:
             container_info = self.current_container_map[ref_id]
             container_bay, container_row, container_tier, _ = utils.get_pile_split(container_info['PILE_PLACE'])
             container_size = container_info['CONTAINER_SIZE']
-            if container_size == 20:
-                start_pile_place_str = f'{self.options.block}{utils.to_double(container_bay)}{utils.to_double(container_row)}'
-                end_pile_place_str = f'{self.options.block}{utils.to_double(container_bay + 2)}{utils.to_double(container_row)}'
-            else:
-                start_pile_place_str = f'{self.options.block}{utils.to_double(container_bay - 1)}{utils.to_double(container_row)}'
-                end_pile_place_str = f'{self.options.block}{utils.to_double(container_bay + 1)}{utils.to_double(container_row)}'
+            start_pile_place_str = container_info['START_PILE_PLACE'][0:6]
+            end_pile_place_str = container_info['END_PILE_PLACE'][0:6]
             if start_pile_place_str in self.yard_stack_map:
                 start_pile_place = self.yard_stack_map[start_pile_place_str]
                 stack_container_list = start_pile_place['CONTAINER_LIST']
@@ -1139,8 +1105,8 @@ class DockerGame:
             'containerRefIds': ref_id_list
         })
         cache_key = f'''bl_{cache_key}'''
-        result = self.redis.get(cache_key)
-        container_bill_list = json.loads(result)
+        container_bill_list = self.cache_main_data[cache_key]
+        container_bill_list = json.loads(container_bill_list)
         return json.dumps(container_bill_list)
         return result
 
@@ -1149,10 +1115,17 @@ class DockerGame:
         cache_key = utils.get_cache_key({
             'd': self.options.init_time
         })
-        result = self.redis.get(cache_key)
-        result_json = json.loads(result)
+        result_json = self.cache_main_data[cache_key]
+        result_json = json.loads(result_json)
         for container in result_json:
             container['CONTAINER_SIZE'] = int(container['CONTAINER_TYPE'][0:2])
+            container_bay, container_row, container_tier, _ = utils.get_pile_split(container['PILE_PLACE'])
+            if container['CONTAINER_SIZE'] == 20:
+                container['START_PILE_PLACE'] = f'''{self.options.block}{utils.to_double(container_bay)}{utils.to_double(container_row)}{container_tier}'''
+                container['END_PILE_PLACE'] = f'''{self.options.block}{utils.to_double(container_bay + 2)}{utils.to_double(container_row)}{container_tier}'''
+            else:
+                container['START_PILE_PLACE'] = f'''{self.options.block}{utils.to_double(container_bay - 1)}{utils.to_double(container_row)}{container_tier}'''
+                container['END_PILE_PLACE'] = f'''{self.options.block}{utils.to_double(container_bay + 1)}{utils.to_double(container_row)}{container_tier}'''
             self.current_container_map[container['CONTAINER_REF_ID']] = container
 
     # get operation list
@@ -1164,8 +1137,8 @@ class DockerGame:
             'fixed_date': self.options.init_time
         })
         cache_key = f'''op_{cache_key}'''
-        result = self.redis.get(cache_key)
-        operation_list = json.loads(result)
+        operation_list = self.cache_main_data[cache_key]
+        operation_list = json.loads(operation_list)
         for operation in operation_list:
             if operation['FROM_PILE'] is not None and operation['TO_PILE'] is not None:
                 operation['ACTION'] = 'move'
@@ -1188,18 +1161,21 @@ class DockerGame:
             'opTime': self.current_time
         })
         cache_key = f'''uc_{cache_key}'''
-        result = self.redis.get(cache_key)
-        container_status_list = json.loads(result)
+        container_status_list = self.cache_main_data[cache_key]
+        container_status_list = json.loads(container_status_list)
         for container_status in container_status_list:
             self.current_container_map[container_status['CONTAINER_REF_ID']] = dict(
                 self.current_container_map[container_status['CONTAINER_REF_ID']], **container_status)
-        return result
 
 
 if __name__ == '__main__':
-    docker_game_options = DockerGameOptions('01', 16, 15, 4)
+    docker_game_options = DockerGameOptions('01', 16, 15, 4, with_predict=False)
     docker_game = DockerGame(docker_game_options)
     docker_game.reset()
     docker_game.create_game()
+    docker_game.get_observation_space()
+    docker_game.get_action_space()
     while docker_game.game_over is not True:
         docker_game.take_action()
+    utils.cache_game(docker_game)
+    print(sum([reward[3] for reward in docker_game.part_reward_list]))

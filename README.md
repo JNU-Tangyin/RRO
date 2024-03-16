@@ -2,11 +2,9 @@
 
 The main objective of the container relocation problem (CRP) is to retrieve all containers stacked in a container terminal while minimizing the efforts of relocating containers. However, the serious imbalance in containers' duration of stay in the terminal causes highly inconsistent incoming and outgoing sequences of containers, creating a highly irregular problem space as a result. These intrinsic characteristics make it difficult and costly to relocate containers following human experiences. Stuck with tremendous state spaces, previous research on the CRP mostly limits the problem in a two-dimensional environment (e.g., single bay), under the assumption that a fixed container retrieval sequence is given. While in this paper, we address a three-dimensional (3D) CRP with consideration of the stochastic duration of stay of containers. We propose a two-stage prediction-optimization model to smooth the highly irregular state space by introducing historical data to predict the retrieval dates of containers. A deep reinforcement learning approach is developed to optimize relocation policies based on the predictions. A computational study on a real-world 3D container terminal show that, compared to empirical rules and approaches without predictions, the proposed model reduces the relocation rate of containers significantly. 
 
-codes to be released soon. 
+Feel free to watch video below.  Entities names are encrypted due to privacy reason:
 
-Feel free to watch video below:
-
-https://github.com/JNU-Tangyin/RRO/assets/1193630/17ef965e-7bac-4fde-bd6b-8723c4c7d278
+https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d6320057b
 
 ## File && Folders
 
@@ -36,7 +34,7 @@ git clone https://github.com/JNU-Tangyin/RRO.git
 ```
 
 2. Installation environment dependent software
-- install redis-server 7.0
+- install node 16
 - install python3
 - install virtualenv
 ```shell
@@ -51,11 +49,8 @@ cd frontend
 npm install
 ```
 
-4. Prepare data
-- copy datasets/redis/dump.rdb to redis-server folder
-```shell
-redis-server
-```
+4. Perpare data
+- unzip datasets/json/cache_main_data.json.zip
 
 5. Train and evaluate model, run frontend project.
 ```shell
@@ -81,7 +76,7 @@ learning approach},
 If you have any questions or suggestions, feel free to contact:
 
 - Yin Tang (ytang@jnu.edu.cn)
-- Zengjian Ye()
+- Zengjian Ye(yiptsangkin@gmail.com)
 - Jian Zhang (jianzhang@scut.edu.cn)
 
 Or describe it in Issues.

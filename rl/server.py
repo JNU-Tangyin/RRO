@@ -4,6 +4,7 @@ import json
 from docker import DockerGame, DockerGameOptions
 from gevent import pywsgi
 from geventwebsocket.handler import WebSocketHandler
+import utils
 
 app = Flask(__name__)
 sockets = Sockets(app)
@@ -22,10 +23,14 @@ def create_docker_game(ws):
             message_dict = json.loads(message)
             if message_dict['r_type'] == 'create_game':
                 # 初始化堆场信息
-                docker_game_options = DockerGameOptions('01', 16, 15, 4)
+                '''
+                docker_game_options = DockerGameOptions('01', 16, 15, 4, '2021-08-21 20:46:56', '2021-08-27 23:59:58',
+                                                        True, 2, 40)
                 docker_game = DockerGame(docker_game_options)
                 docker_game.reset()
                 docker_game.create_game()
+                '''
+                docker_game = utils.repair_game()
                 ws.send(json.dumps({
                     'code': 0,
                     'message': '现场箱信息',
