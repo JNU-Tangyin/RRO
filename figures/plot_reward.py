@@ -84,4 +84,4 @@ plot = (ggplot()
         + theme_prism()
         )
 
-plot.save('../figures/rl/ppo_v4_reward.png')
+plot.save('../figures/rl/ppo_v4_reward.pdf')

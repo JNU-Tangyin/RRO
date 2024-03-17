@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
-from plotnine import ggplot, aes, geom_line, geom_point, labs, theme_classic
+from plotnine import * # ggplot, aes, geom_line, geom_point, labs, theme_classic
 from plotnine_prism import theme_prism
 import random
 
+npg = ["#E64B35CC","#4DBBD5CC","#00A087CC", "#3C5488CC", "#F39B7FCC", "#8491B4CC", "#91D1c2CC","#DC0000CC", "#7E6148CC"]
 bp_df = pd.read_excel('../results/bp/PRE_RESULT.xlsx', index_col=0)
 lgb_df = pd.read_excel('../results/lgb/PRE_RESULT.xlsx', index_col=0)
 svm_df = pd.read_excel('../results/svm/PRE_RESULT.xlsx', index_col=0)
@@ -44,14 +45,16 @@ not_sequences_df = pd.DataFrame({
 
 plot = (
     ggplot()
-    + geom_line(port_svm_df, aes(x='episode', y='PRE_DIFF', color='algorithm', fill='algorithm'))
-    + geom_line(port_svm_real_df, aes(x='episode', y='REAL_DIFF', color='algorithm', fill='algorithm'))
-    + geom_point(not_sequences_df, aes(x='episode', y='diff'), size=6, fill=None, alpha=0.3)
-    + labs(x='Episode', y='Stacking days')
+    + geom_line(port_svm_df, aes(x='episode', y='PRE_DIFF', color='algorithm', fill='algorithm'), size = 1)
+    + geom_line(port_svm_real_df, aes(x='episode', y='REAL_DIFF', color='algorithm', fill='algorithm'), size = 1)
+    + geom_point(not_sequences_df, aes(x='episode', y='diff'), size=6, fill=None, alpha=0.2)
+    + labs(x='Episode', y='#Stacking days')
+    # + scale_fill_manual(values=npg)
+    # + scale_color_manual(values=npg)
     + theme_prism()
 )
 
-plot.save('../figures/rl/consistency_between_predicted_and_actual_container_retrieval_sequences.png')
+plot.save('../figures/rl/consistency_between_predicted_and_actual_container_retrieval_sequences.pdf')
 
 port_svm_df['algorithm'] = ['svr' for _ in range(len(port_svm_pre_diff_list))]
 port_lgb_df['algorithm'] = ['lightGBM' for _ in range(len(port_lgb_pre_diff_list))]
@@ -61,10 +64,12 @@ concat_df = pd.concat([port_svm_df, port_lgb_df, port_bp_df])
 
 compet_plot = (
     ggplot()
-    + geom_line(concat_df, aes(x='episode', y='PRE_DIFF', color='algorithm', fill='algorithm'))
-    + geom_line(port_svm_real_df, aes(x='episode', y='REAL_DIFF', color='algorithm', fill='algorithm'), linetype='dashed')
-    + labs(x='Episode', y='Stacking days')
+    + geom_line(concat_df, aes(x='episode', y='PRE_DIFF', color='algorithm', fill='algorithm'), size = 1)
+    + geom_line(port_svm_real_df, aes(x='episode', y='REAL_DIFF', color='algorithm', fill='algorithm'), linetype='dashed', size = 1)
+    + labs(x='Episode', y='#Stacking days')
+    # + scale_fill_manual(values=npg)
+    # + scale_color_manual(values=npg)
     + theme_prism()
 )
 
-compet_plot.save('../figures/rl/comparison_of_prediction_accuracy_of_different_methods.png')
+compet_plot.save('../figures/rl/comparison_of_prediction_accuracy_of_different_methods.pdf')

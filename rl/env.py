@@ -96,11 +96,11 @@ class DockerYard(gym.Env):
         self.action_space = spaces.Discrete(len(self.action_map.keys()))
         if self.docker_game.options.with_predict:
             min_row = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -200, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
-            max_row = [3, 15, 4, 1, 1, 1, 1, 1, 1, 200, 200, 200, len(self.docker_game.cache_bill_map.keys()),
+            max_row = [31, 15, 4, 1, 1, 1, 1, 1, 1, 200, 200, 200, len(self.docker_game.cache_bill_map.keys()),
                        len(self.docker_game.cache_consignor_map.keys()), 40, 1, 1, 1, 1, 50, 3, self.able_wrong_times]
         else:
             min_row = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
-            max_row = [3, 15, 4, 1, 1, 1, 1, 1, 1, 200, len(self.docker_game.cache_bill_map.keys()),
+            max_row = [31, 15, 4, 1, 1, 1, 1, 1, 1, 200, len(self.docker_game.cache_bill_map.keys()),
                        len(self.docker_game.cache_consignor_map.keys()), 40, 1, 1, 1, 1, 50, 3, self.able_wrong_times]
         self.observation_space = spaces.Box(
             low=np.float32([min_row for _ in range(len(self.observation_list))]),

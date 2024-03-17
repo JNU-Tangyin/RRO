@@ -6,7 +6,7 @@ Feel free to watch video below.  Entities names are encrypted due to privacy rea
 
 https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d6320057b
 
-## File && Folders
+## File & Folders
 
 - **datasets** the datasets to train and test. the files in datasets/excel is for prediction stage, the files in datasets/json and datasets/redis is for optimization stage.
 
@@ -26,35 +26,48 @@ https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d63
 
 - **requirements.txt** for installation of virtual env
 
+## Getting started
 
-## Usage
 1. Clone
-```shell
-git clone https://github.com/JNU-Tangyin/RRO.git
-```
+   
+   ```shell
+   git clone https://github.com/JNU-Tangyin/RRO.git
+   ```
 
 2. Installation environment dependent software
 - install node 16
 - install python3
 - install virtualenv
-```shell
-pip3 install virtualenv venv
-```
-
+  
+  ```shell
+  pip3 install virtualenv venv
+  ```
 3. Install dependencies
-```shell
-virtualenv venv
-pip install -r requirements.txt
-cd frontend
-npm install
-```
+   
+   ```shell
+   virtualenv venv
+   pip install -r requirements.txt
+   cd frontend
+   npm install
+   ```
 
 4. Perpare data
 - unzip datasets/json/cache_main_data.json.zip
 
 5. Train and evaluate model, run frontend project.
-```shell
-python3 main.py
+   
+   ```shell
+   python3 main.py
+   ```
+
+Specifically, `main.py` does the following steps, which you can instead start them one by one:
+
+```python
+redis-server                  # start the global redis server
+cd predict && python main.py  # start the predict stage
+cd rl && python server.py     # start the 3d environment
+cd rl && python env.py        # reinforcement learning stage
+cd frontend && npm run dev    # start the frontend
 ```
 
 ## Citation
