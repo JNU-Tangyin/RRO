@@ -70,6 +70,30 @@ cd rl && python env.py        # reinforcement learning stage
 cd frontend && npm run dev    # start the frontend
 ```
 
+## Pure Environment
+
+If you want to run the pure environment without training, you can install rro_env from pypi:
+
+```shell
+pip install rro-env
+```
+
+A simple example to run the environment:
+
+```python
+import gymnasium as gym
+import rro_env
+
+env = gym.make('RROEnv-v0')
+
+env.reset()
+# get current operation able pile place list
+print(env.docker_game.get_able_pile_list())
+# action space and pile place mapping
+print(env.docker_game.get_action_space())
+env.step(480)
+```
+
 ## Citation
 
 If you find this repo useful, please cite our paper.
