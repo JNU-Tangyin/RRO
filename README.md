@@ -6,7 +6,7 @@ Feel free to watch video below.  Entities names are encrypted due to privacy rea
 
 https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d6320057b
 
-## Files & Folders
+## File & Folders
 
 - **datasets** the datasets to train and test. the files in datasets/excel is for prediction stage, the files in datasets/json and datasets/redis is for optimization stage.
 
@@ -35,10 +35,8 @@ https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d63
    ```
 
 2. Installation environment dependent software
-- install redis-server 7.0
-
+- install node 16
 - install python3
-
 - install virtualenv
   
   ```shell
@@ -53,12 +51,9 @@ https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d63
    npm install
    ```
 
-4. Prepare data
-- copy `datasets/redis/dump.rdb` to redis-server folder
-  
-  ```shell
-  redis-server
-  ```
+4. Perpare data
+- unzip datasets/json/cache_main_data.json.zip
+
 5. Train and evaluate model, run frontend project.
    
    ```shell
@@ -73,6 +68,30 @@ cd predict && python main.py  # start the predict stage
 cd rl && python server.py     # start the 3d environment
 cd rl && python env.py        # reinforcement learning stage
 cd frontend && npm run dev    # start the frontend
+```
+
+## Pure Environment
+
+If you want to run the pure environment without training, you can install rro_env from pypi:
+
+```shell
+pip install rro-env
+```
+
+A simple example to run the environment:
+
+```python
+import gymnasium as gym
+import rro_env
+
+env = gym.make('RROEnv-v0')
+
+env.reset()
+# get current operation able pile place list
+print(env.docker_game.get_able_pile_list())
+# action space and pile place mapping
+print(env.docker_game.get_action_space())
+env.step(480)
 ```
 
 ## Citation
@@ -94,7 +113,7 @@ learning approach},
 If you have any questions or suggestions, feel free to contact:
 
 - Yin Tang (ytang@jnu.edu.cn)
-- Zengjian Ye()
+- Zengjian Ye(yiptsangkin@gmail.com)
 - Jian Zhang (jianzhang@scut.edu.cn)
 
 Or describe it in Issues.

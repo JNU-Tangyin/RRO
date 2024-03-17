@@ -1,0 +1,4 @@
+Algorithm,Relocated containers,Relocation rate (%),Moving distance *
+Human,244.0,95.6,Not available
+PPO with prediction,217.41442251258763,85.2605578480736,4290.592282148704
+PPO without prediction,217.79473306067194,85.40969923947918,4290.705621287566

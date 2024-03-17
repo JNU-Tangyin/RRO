@@ -4,18 +4,20 @@ from plotnine import *  # ggplot, aes, geom_line, geom_ribbon, theme_minimal, gg
 from plotnine_prism import theme_prism
 import json
 
-
-npg = ["#E64B35CC","#4DBBD5CC","#00A087CC", "#3C5488CC", "#F39B7FCC", "#8491B4CC", "#91D1c2CC","#DC0000CC", "#7E6148CC"]
+npg = ["#E64B35CC", "#4DBBD5CC", "#00A087CC", "#3C5488CC", "#F39B7FCC", "#8491B4CC", "#91D1c2CC", "#DC0000CC",
+       "#7E6148CC"]
 plot_list = [
     {
-        'path': '../results/rl/ppo_wp_v4_train_game_status_list_202403031739_{}.txt',
+        'path': '../results/rl/ppo_wp_v4_train_game_status_list_{}.txt',
         'nums': 4,
-        'label': 'ppo v4 w/ pred'
+        'label': 'ppo v4 w/ pred',
+        'full_label': 'PPO with prediction'
     },
     {
-        'path': '../results/rl/ppo_wop_v4_train_game_status_list_202403031644_{}.txt',
+        'path': '../results/rl/ppo_wop_v4_train_game_status_list_{}.txt',
         'nums': 4,
-        'label': 'ppo v4 w/o pred'
+        'label': 'ppo v4 w/o pred',
+        'full_label': 'PPO without prediction'
     }
 ]
 
@@ -26,9 +28,14 @@ detail_reload_twice_df_list = []
 detail_huge_car_list = []
 detail_mini_car_list = []
 
+full_label_list = ['Human']
+mean_reload_list = [244]
+mean_reload_rate_list = [95.6]
+mean_move_distance_list = ['Not available']
+
 for idx, plot_item in enumerate(plot_list):
     tem_plot_obj_list = []
-    for fidx in range(plot_item['nums']):
+    for fidx in range(0, plot_item['nums']):
         file_item = open(plot_item['path'].format(fidx), 'r')
         file_obj = json.loads(file_item.read())
         file_item.close()
@@ -46,17 +53,27 @@ for idx, plot_item in enumerate(plot_list):
                     'reload_count': [],
                     'reload_twice_count': [],
                     'huge_car_dist': [],
-                    'mini_car_dist': []
+                    'mini_car_dist': [],
+                    'reload_rate': []
                 }
             tem_op_map[total_op_nums]['reload_count'].append(detail_item[1])
             tem_op_map[total_op_nums]['reload_twice_count'].append(detail_item[2])
+            tem_op_map[total_op_nums]['reload_rate'].append(detail_item[4])
             tem_op_map[total_op_nums]['huge_car_dist'].append(detail_item[6])
             tem_op_map[total_op_nums]['mini_car_dist'].append(detail_item[7])
 
-        for key in tem_op_map.keys():
-            print(key, len(tem_op_map[key]['reload_count']))
         max_total_op_nums = max(tem_op_map.keys())
         tem_detail_plot_list.append(tem_op_map[max_total_op_nums])
+
+    min_plot_obj_len = min([len(plot_obj['reload_count']) for plot_obj in tem_detail_plot_list])
+
+    full_label_list.append(plot_item['full_label'])
+    mean_reload = np.mean([np.mean(detail_item['reload_count']) for detail_item in tem_detail_plot_list])
+    mean_reload_rate = np.mean([np.mean(detail_item['reload_rate']) for detail_item in tem_detail_plot_list])
+    mean_distance = np.mean([np.mean(detail_item['huge_car_dist']) for detail_item in tem_detail_plot_list])
+    mean_reload_list.append(mean_reload)
+    mean_reload_rate_list.append(mean_reload_rate)
+    mean_move_distance_list.append(mean_distance)
 
     min_plot_obj_len = min([len(plot_obj['reload_count']) for plot_obj in tem_detail_plot_list])
 
@@ -116,23 +133,20 @@ plot = (ggplot()
         + geom_line(final_detail_df, aes(x='episode', y='mean detail', color='algorithm', fill='algorithm'))
         + labs(x='Episode', y='#Relocation')
         + geom_ribbon(final_detail_df,
-                aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'), alpha=0.2)
-                # + scale_fill_manual(values=npg)
-                # + scale_color_manual(values=npg)
-                + theme_prism()
+                      aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'), alpha=0.2)
+        # + scale_fill_manual(values=npg)
+        # + scale_color_manual(values=npg)
+        + theme_prism()
         )
 
 plot_huge_car = (ggplot()
-                + geom_line(final_detail_huge_car_df, aes(x='episode', y='mean detail', color='algorithm', fill='algorithm'))
-                + labs(x='Episode', y='#Crane movement distance')
-                + geom_ribbon(final_detail_huge_car_df,
-                            aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'),
-                            alpha=0.2)
-                # + scale_fill_manual(values=npg)
-                # + scale_color_manual(values=npg)
-                + theme_prism()
-                )
-
-
-plot.save('../figures/rl/ppo_v4_reload_count.pdf')
-plot_huge_car.save('../figures/rl/ppo_v4_crane_movement_distance.pdf')
+                 + geom_line(final_detail_huge_car_df,
+                             aes(x='episode', y='mean detail', color='algorithm', fill='algorithm'))
+                 + labs(x='Episode', y='#Crane movement distance')
+                 + geom_ribbon(final_detail_huge_car_df,
+                               aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'),
+                               alpha=0.2)
+                 + theme_prism()
+                 )
+plot.save('../figures/rl/ppo_v4_reload_count.png')
+plot_huge_car.save('../figures/rl/ppo_v4_crane_movement_distance.png')

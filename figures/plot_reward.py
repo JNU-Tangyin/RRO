@@ -4,22 +4,24 @@ from plotnine import ggplot, aes, geom_line, geom_ribbon, theme_minimal, ggtitle
 from plotnine_prism import theme_prism
 import json
 
-
 plot_list = [
     {
-        'path': '../results/rl/ppo_wp_v4_train_game_status_list_202403031739_{}.txt',
-        'nums': 4,
-        'label': 'ppo v4 w/ pred'
+        'path': '../results/rl/ppo_wp_v4_train_game_status_list_{}.txt',
+        'nums': 2,
+        'label': 'ppo v4 w/ pred',
+        'full_label': 'PPO with prediction'
     },
     {
-        'path': '../results/rl/ppo_wop_v4_train_game_status_list_202403031644_{}.txt',
-        'nums': 4,
-        'label': 'ppo v4 w/o pred'
+        'path': '../results/rl/ppo_wop_v4_train_game_status_list_{}.txt',
+        'nums': 2,
+        'label': 'ppo v4 w/o pred',
+        'full_label': 'PPO without prediction'
     },
     {
-        'path': '../results/rl/a2c_train_game_status_list_202403041438_{}.txt',
+        'path': '../results/rl/a2c_wp_v4_train_game_status_list_{}.txt',
         'nums': 4,
-        'label': 'a2c v4 w/ pred'
+        'label': 'a2c v4 w/ pred',
+        'full_label': 'A2C with prediction'
     }
 ]
 
@@ -29,7 +31,6 @@ detail_reload_twice_df_list = []
 detail_huge_car_list = []
 detail_mini_car_list = []
 
-
 for idx, plot_item in enumerate(plot_list):
     tem_plot_obj_list = []
     for fidx in range(plot_item['nums']):
@@ -38,7 +39,7 @@ for idx, plot_item in enumerate(plot_list):
         file_item.close()
         tem_plot_obj_list.append(file_obj)
 
-    window_size = 5
+    window_size = 10
     # reward
     min_plot_obj_len = min([len(plot_obj['total_reward_list']) for plot_obj in tem_plot_obj_list])
     tem_plot_obj_datas = np.array([plot_obj['total_reward_list'][0:min_plot_obj_len] for plot_obj in tem_plot_obj_list])
@@ -57,12 +58,22 @@ for idx, plot_item in enumerate(plot_list):
 min_reward_df_len = min([reward_df.shape[0] for reward_df in reward_df_list])
 for r_idx, tem_reward_df in enumerate(reward_df_list):
     reward_df = tem_reward_df.head(min_reward_df_len).copy()
+    reward_df = tem_reward_df.head(min_reward_df_len).copy()
     reward_df['mean reward'] = reward_df['mean reward'].rolling(window=window_size, center=True).mean()
     reward_df = reward_df.dropna()
 
     reward_df['upper'] = reward_df['mean reward'] + reward_df['std reward']
     reward_df['lower'] = reward_df['mean reward'] - reward_df['std reward']
     reward_df_list[r_idx] = reward_df
+
+# human reward
+human_reward_df = pd.DataFrame({
+    'episode': range(0, min_reward_df_len),
+    'mean reward': 365410,
+    'algorithm': 'human'
+})
+
+reward_df_list.append(human_reward_df)
 
 final_reward_df = pd.concat(reward_df_list)
 
