@@ -91,20 +91,18 @@ import rro_env
 import random
 
 Epochs = 10
-env = gym.make('RROEnv')
-
+env = gym.make('RROEnv-v0')
 env.reset()
+
 # get current operation able pile place list
 print(env.docker_game.get_able_pile_list())
 
 # action space and pile place mapping
-actions = env.docker_game.get_action_space()
-print(actions)
-
+actions = list(env.docker_game.get_action_space().keys())
 for _ in range(Epochs):
-   a = random.choice(actions) # random guess,replaced with yours
-   s = env.step(a)
-   print(s)
+    a = random.choice(actions)
+    s = env.step(a)
+    print(a)
 ```
 
 ## Citation
