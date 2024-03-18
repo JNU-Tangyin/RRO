@@ -6,13 +6,13 @@ Feel free to watch video below.  Entities names are encrypted due to privacy rea
 
 https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d6320057b
 
-## File & Folders
+## Files & Folders
 
-- **datasets** the datasets to train and test. the files in datasets/excel is for prediction stage, the files in datasets/json and datasets/redis is for optimization stage.
+- **datasets** the datasets to train and test the model. The files under `datasets/excel` is for prediction stage, the files under `datasets/json` and `datasets/redis` is for optimization stage.
 
-- **figures** all images drawn based on the data from the training results.
+- **figures**  all images drawn based on the training results under `results`.
 
-- **frontend** 3D storage yard front-end engineering project.
+- **frontend** 3D storage yard front-end engine. It has been made standalone for future use.
 
 - **predict** documents related to stacking days prediction model.
 
@@ -20,11 +20,11 @@ https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d63
 
 - **rl** documents related to container relocation optimization model.
 
-- **main.py** entry file for run program.
+- **main.py**  main entry to run the program.
 
-- **README.md** introduce how to run this project.
+- **README.md** This file.
 
-- **requirements.txt** for installation of virtual env
+- **requirements.txt**  for installation of virtual env
 
 ## Getting started
 
@@ -35,13 +35,17 @@ https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d63
    ```
 
 2. Installation environment dependent software
-- install node 16
-- install python3
-- install virtualenv
-  
-  ```shell
-  pip3 install virtualenv venv
-  ```
+   
+   - install node16 # for front end
+   
+   - install python3
+   
+   - install virtualenv
+
+```shell
+pip3 install virtualenv venv
+```
+
 3. Install dependencies
    
    ```shell
@@ -52,8 +56,7 @@ https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d63
    ```
 
 4. Perpare data
-- unzip datasets/json/cache_main_data.json.zip
-
+- unzip `datasets/json/cache_main_data.json.zip` to local folder (153.3m)
 5. Train and evaluate model, run frontend project.
    
    ```shell
@@ -70,10 +73,11 @@ cd rl && python env.py        # reinforcement learning stage
 cd frontend && npm run dev    # start the frontend
 ```
 
-## Pure Environment
+## A Standalone 3D Simulation Environment for Container Relocation
+
 Note: the 3d environment has now been made standalone as a python module!
 
-If you want to run the pure environment without training, you can install rro_env from pypi [check this out on pypi.org](https://pypi.org/project/rro-env):
+If you want to run the pure environment without training, you can install `rro_env `from pypi [check this out on pypi.org](https://pypi.org/project/rro-env):
 
 ```shell
 pip install rro-env
@@ -84,7 +88,9 @@ A toy example to run the environment:
 ```python
 import gymnasium as gym
 import rro_env
+import random
 
+Epochs = 10
 env = gym.make('RROEnv')
 
 env.reset()
@@ -92,10 +98,12 @@ env.reset()
 print(env.docker_game.get_able_pile_list())
 
 # action space and pile place mapping
-print(env.docker_game.get_action_space())
+actions = env.docker_game.get_action_space()
+print(actions)
 
 for _ in range(Epochs):
-   s = env.step(480)
+   a = random.choice(actions) # random guess,replaced with yours
+   s = env.step(a)
    print(s)
 ```
 
