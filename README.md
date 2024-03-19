@@ -8,9 +8,9 @@ https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d63
 
 ## Files & Folders
 
-- **datasets** the datasets to train and test the model. The files under `datasets/excel` is for prediction stage, the files under `datasets/json` and `datasets/redis` is for optimization stage.
+- **datasets** the datasets to train and test the model. The files under `datasets/excel` is for prediction stage, and the files under `datasets/json` are for optimization stage.
 
-- **figures**  all images drawn based on the training results under `results`.
+- **figures**  all images drawn based on the training results under `results/`.
 
 - **frontend** 3D storage yard front-end engine. It has been made standalone for future use.
 
