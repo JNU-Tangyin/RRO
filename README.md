@@ -36,11 +36,11 @@ https://github.com/JNU-Tangyin/RRO/assets/1193630/8ac41cf0-e800-43d2-acd2-a61d63
 
 2. Installation environment dependent software
    
-   - install node16 # for front end
+   - install node16         # for front end
    
    - install python3
    
-   - install virtualenv
+   - install virtualenv    # conda is also acceptable
 
 ```shell
 pip3 install virtualenv venv
@@ -56,7 +56,7 @@ pip3 install virtualenv venv
    ```
 
 4. Perpare data
-- unzip `datasets/json/cache_main_data.json.zip` to local folder (153.3m)
+- unzip `datasets/json/cache_main_data.json.zip` to the same folder (153.3m)
 5. Train and evaluate model, run frontend project.
    
    ```shell
@@ -66,7 +66,6 @@ pip3 install virtualenv venv
 Specifically, `main.py` does the following steps, which you can instead start them one by one:
 
 ```python
-redis-server                  # start the global redis server
 cd predict && python main.py  # start the predict stage
 cd rl && python server.py     # start the 3d environment
 cd rl && python env.py        # reinforcement learning stage
