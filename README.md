@@ -107,16 +107,10 @@ for _ in range(Epochs):
 
 ## Citation
 
-If you find this repo useful, please cite our paper.
+
 
 ```
-@inproceedings{tang2024rro,
-  title={Regulating the imbalance for the container relocation problem: A deep reinforcement
-learning approach},
-  author={Yin Tang, Zengjian Ye, Yongjian Chen, Wanting Gao, Zezheng Li, Yan Li, Yixuan Xiao, Jie Lu, Shuqiang Huang, Jian Zhang∗},
-  journal={Computers & Industrial Engineering},
-  year={2024},
-}
+
 ```
 
 ## Contact
