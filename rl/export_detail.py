@@ -4,6 +4,7 @@ from plotnine import ggplot, aes, geom_line, geom_ribbon, theme_minimal, ggtitle
 from plotnine_prism import theme_prism
 import json
 
+
 plot_list = [
     {
         'path': '../results/rl/ppo_wp_v4_train_game_status_list_{}.txt',
