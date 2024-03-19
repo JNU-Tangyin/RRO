@@ -30,10 +30,10 @@ for idx, row in enumerate(port_svm_pre_diff_list):
             not_sequences_list.append(idx)
 
 port_svm_df['episode'] = range(len(port_svm_pre_diff_list))
-port_svm_df['algorithm'] = ['predict' for _ in range(len(port_svm_pre_diff_list))]
+port_svm_df['algorithm'] = ['Predicted' for _ in range(len(port_svm_pre_diff_list))]
 
 port_svm_real_df = port_svm_df.copy()
-port_svm_real_df['algorithm'] = ['real' for _ in range(len(port_svm_pre_diff_list))]
+port_svm_real_df['algorithm'] = ['Real' for _ in range(len(port_svm_pre_diff_list))]
 
 port_lgb_df['episode'] = range(len(port_lgb_pre_diff_list))
 port_bp_df['episode'] = range(len(port_bp_pre_diff_list))
@@ -48,17 +48,18 @@ plot = (
     + geom_line(port_svm_df, aes(x='episode', y='PRE_DIFF', color='algorithm', fill='algorithm'), size = 1)
     + geom_line(port_svm_real_df, aes(x='episode', y='REAL_DIFF', color='algorithm', fill='algorithm'), size = 1)
     + geom_point(not_sequences_df, aes(x='episode', y='diff'), size=6, fill=None, alpha=0.2)
-    + labs(x='Episode', y='#Stacking days')
-    # + scale_fill_manual(values=npg)
-    # + scale_color_manual(values=npg)
+    + labs(x='Container pickup sequence', y='#Stacking days')
+    + scale_fill_manual(values=npg)
+    + scale_color_manual(values=npg)
     + theme_prism()
+    + theme(legend_position=(0.2,0.8))
 )
 
 plot.save('../figures/rl/consistency_between_predicted_and_actual_container_retrieval_sequences.pdf')
 
-port_svm_df['algorithm'] = ['svr' for _ in range(len(port_svm_pre_diff_list))]
-port_lgb_df['algorithm'] = ['lightGBM' for _ in range(len(port_lgb_pre_diff_list))]
-port_bp_df['algorithm'] = ['bp' for _ in range(len(port_bp_pre_diff_list))]
+port_svm_df['algorithm'] = ['SVR' for _ in range(len(port_svm_pre_diff_list))]
+port_lgb_df['algorithm'] = ['LightGBM' for _ in range(len(port_lgb_pre_diff_list))]
+port_bp_df['algorithm'] = ['BP' for _ in range(len(port_bp_pre_diff_list))]
 
 concat_df = pd.concat([port_svm_df, port_lgb_df, port_bp_df])
 
@@ -66,10 +67,11 @@ compet_plot = (
     ggplot()
     + geom_line(concat_df, aes(x='episode', y='PRE_DIFF', color='algorithm', fill='algorithm'), size = 1)
     + geom_line(port_svm_real_df, aes(x='episode', y='REAL_DIFF', color='algorithm', fill='algorithm'), linetype='dashed', size = 1)
-    + labs(x='Episode', y='#Stacking days')
-    # + scale_fill_manual(values=npg)
-    # + scale_color_manual(values=npg)
+    + labs(x='Container pickup sequence', y='#Stacking days')
+    + scale_fill_manual(values=npg)
+    + scale_color_manual(values=npg)
     + theme_prism()
+    + theme(legend_position=(.2,.8))
 )
 
 compet_plot.save('../figures/rl/comparison_of_prediction_accuracy_of_different_methods.pdf')
