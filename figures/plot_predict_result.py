@@ -57,9 +57,9 @@ plot = (
 
 plot.save('../figures/rl/consistency_between_predicted_and_actual_container_retrieval_sequences.pdf')
 
-port_svm_df['algorithm'] = ['svr' for _ in range(len(port_svm_pre_diff_list))]
-port_lgb_df['algorithm'] = ['lightGBM' for _ in range(len(port_lgb_pre_diff_list))]
-port_bp_df['algorithm'] = ['bp' for _ in range(len(port_bp_pre_diff_list))]
+port_svm_df['algorithm'] = ['SVR' for _ in range(len(port_svm_pre_diff_list))]
+port_lgb_df['algorithm'] = ['LightGBM' for _ in range(len(port_lgb_pre_diff_list))]
+port_bp_df['algorithm'] = ['BP' for _ in range(len(port_bp_pre_diff_list))]
 
 concat_df = pd.concat([port_svm_df, port_lgb_df, port_bp_df])
 

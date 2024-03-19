@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from plotnine import ggplot, aes, geom_line, geom_ribbon, theme_minimal, ggtitle, labs, stat_smooth
+from plotnine import ggplot, aes, geom_line, geom_ribbon, theme_minimal, ggtitle, labs, stat_smooth, theme
 from plotnine_prism import theme_prism
 import json
 
@@ -8,19 +8,19 @@ plot_list = [
     {
         'path': '../results/rl/ppo_wp_v4_train_game_status_list_{}.txt',
         'nums': 2,
-        'label': 'ppo v4 w/ pred',
+        'label': 'PPO v4 w/ pred',
         'full_label': 'PPO with prediction'
     },
     {
         'path': '../results/rl/ppo_wop_v4_train_game_status_list_{}.txt',
         'nums': 2,
-        'label': 'ppo v4 w/o pred',
+        'label': 'PPO v4 w/o pred',
         'full_label': 'PPO without prediction'
     },
     {
         'path': '../results/rl/a2c_wp_v4_train_game_status_list_{}.txt',
         'nums': 4,
-        'label': 'a2c v4 w/ pred',
+        'label': 'A2C v4 w/ pred',
         'full_label': 'A2C with prediction'
     }
 ]
@@ -64,13 +64,15 @@ for r_idx, tem_reward_df in enumerate(reward_df_list):
 
     reward_df['upper'] = reward_df['mean reward'] + reward_df['std reward']
     reward_df['lower'] = reward_df['mean reward'] - reward_df['std reward']
+    # reward_df['upper'] = reward_df['upper'].rolling(10, center=True).mean()
+    # reward_df['lower'] = reward_df['lower'].rolling(10, center=True).mean()
     reward_df_list[r_idx] = reward_df
 
 # human reward
 human_reward_df = pd.DataFrame({
     'episode': range(0, min_reward_df_len),
     'mean reward': 365410,
-    'algorithm': 'human'
+    'algorithm': 'Human'
 })
 
 reward_df_list.append(human_reward_df)
@@ -82,6 +84,7 @@ plot = (ggplot()
         + labs(x='Episode', y='Reward')
         + geom_ribbon(final_reward_df, aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'), alpha=0.2)
         + theme_prism()
+        + theme(legend_position=(.8,.2))
         )
 
 plot.save('../figures/rl/ppo_v4_reward.pdf')

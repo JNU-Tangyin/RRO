@@ -4,19 +4,18 @@ from plotnine import *  # ggplot, aes, geom_line, geom_ribbon, theme_minimal, gg
 from plotnine_prism import theme_prism
 import json
 
-npg = ["#E64B35CC", "#4DBBD5CC", "#00A087CC", "#3C5488CC", "#F39B7FCC", "#8491B4CC", "#91D1c2CC", "#DC0000CC",
-       "#7E6148CC"]
+npg = ["#E64B35CC", "#4DBBD5CC", "#00A087CC", "#3C5488CC", "#F39B7FCC", "#8491B4CC", "#91D1c2CC", "#DC0000CC", "#7E6148CC"]
 plot_list = [
     {
         'path': '../results/rl/ppo_wp_v4_train_game_status_list_202403181909_{}.txt',
         'nums': 4,
-        'label': 'ppo v4 w/ pred',
+        'label': 'PPO v4 w/ pred',
         'full_label': 'PPO with prediction'
     },
     {
         'path': '../results/rl/ppo_wop_v4_train_game_status_list_202403181809_{}.txt',
         'nums': 4,
-        'label': 'ppo v4 w/o pred',
+        'label': 'PPO v4 w/o pred',
         'full_label': 'PPO without prediction'
     }
 ]
@@ -132,21 +131,20 @@ final_detail_huge_car_df = pd.concat(detail_df_huge_car_list)
 plot = (ggplot()
         + geom_line(final_detail_df, aes(x='episode', y='mean detail', color='algorithm', fill='algorithm'))
         + labs(x='Episode', y='#Relocation')
-        + geom_ribbon(final_detail_df,
-                      aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'), alpha=0.2)
+        + geom_ribbon(final_detail_df, aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'), alpha=0.2)
         # + scale_fill_manual(values=npg)
         # + scale_color_manual(values=npg)
         + theme_prism()
+        + theme(legend_position=(.8,.2))
         )
 
 plot_huge_car = (ggplot()
-                 + geom_line(final_detail_huge_car_df,
-                             aes(x='episode', y='mean detail', color='algorithm', fill='algorithm'))
-                 + labs(x='Episode', y='#Crane movement distance')
-                 + geom_ribbon(final_detail_huge_car_df,
-                               aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'),
-                               alpha=0.2)
-                 + theme_prism()
-                 )
+                + geom_line(final_detail_huge_car_df, aes(x='episode', y='mean detail', color='algorithm', fill='algorithm'))
+                + labs(x='Episode', y='#Crane movement distance')
+                + geom_ribbon(final_detail_huge_car_df,
+                            aes(x='episode', ymin='lower', ymax='upper', fill='algorithm'), alpha=0.2)
+                + theme_prism()
+                + theme(legend_position=(.8,.2))
+                )
 plot.save('../figures/rl/ppo_v4_reload_count.pdf')
 plot_huge_car.save('../figures/rl/ppo_v4_crane_movement_distance.pdf')
