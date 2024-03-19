@@ -9,13 +9,13 @@ plot_list = [
         'path': '../results/rl/ppo_wp_v4_train_game_status_list_{}.txt',
         'nums': 3,
         'label': 'ppo v4 w/ pred',
-        'full_label': 'V4'
+        'full_label': 'V3' # train_type 4 is equal to V3 in the paper
     },
     {
         'path': '../results/rl/ppo_wp_v3_train_game_status_list_{}.txt',
         'nums': 3,
         'label': 'ppo v3 w/ pred',
-        'full_label': 'V3'
+        'full_label': 'V4' # train_type 3 is equal to V4 in the paper
     },
     {
         'path': '../results/rl/ppo_wp_v2_train_game_status_list_{}.txt',
