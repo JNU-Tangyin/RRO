@@ -7,14 +7,14 @@ import json
 plot_list = [
     {
         'path': '../results/rl/ppo_wp_v4_train_game_status_list_{}.txt',
-        'nums': 2,
-        'label': 'PPO v4 w/ pred',
+        'nums': 4,
+        'label': 'ppo v4 w/ pred',
         'full_label': 'PPO with prediction'
     },
     {
         'path': '../results/rl/ppo_wop_v4_train_game_status_list_{}.txt',
-        'nums': 2,
-        'label': 'PPO v4 w/o pred',
+        'nums': 4,
+        'label': 'ppo v4 w/o pred',
         'full_label': 'PPO without prediction'
     },
     {
@@ -62,10 +62,8 @@ for r_idx, tem_reward_df in enumerate(reward_df_list):
     reward_df['mean reward'] = reward_df['mean reward'].rolling(window=window_size, center=True).mean()
     reward_df = reward_df.dropna()
 
-    reward_df['upper'] = reward_df['mean reward'] + reward_df['std reward']
-    reward_df['lower'] = reward_df['mean reward'] - reward_df['std reward']
-    # reward_df['upper'] = reward_df['upper'].rolling(10, center=True).mean()
-    # reward_df['lower'] = reward_df['lower'].rolling(10, center=True).mean()
+    reward_df['upper'] = (reward_df['mean reward'] + reward_df['std reward']).rolling(window=window_size, center=True).mean()
+    reward_df['lower'] = (reward_df['mean reward'] - reward_df['std reward']).rolling(window=window_size, center=True).mean()
     reward_df_list[r_idx] = reward_df
 
 # human reward

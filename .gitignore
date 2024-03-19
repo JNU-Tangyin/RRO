@@ -1,7 +1,8 @@
-#
+# env
 node_modules
 /venv
 
 # others
 .DS_Store
+.idea
 
