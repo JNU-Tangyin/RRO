@@ -7,13 +7,13 @@ import json
 plot_list = [
     {
         'path': '../results/rl/ppo_wp_v4_train_game_status_list_{}.txt',
-        'nums': 2,
+        'nums': 4,
         'label': 'ppo v4 w/ pred',
         'full_label': 'PPO with prediction'
     },
     {
         'path': '../results/rl/ppo_wop_v4_train_game_status_list_{}.txt',
-        'nums': 2,
+        'nums': 4,
         'label': 'ppo v4 w/o pred',
         'full_label': 'PPO without prediction'
     },

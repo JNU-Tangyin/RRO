@@ -8,13 +8,13 @@ npg = ["#E64B35CC", "#4DBBD5CC", "#00A087CC", "#3C5488CC", "#F39B7FCC", "#8491B4
        "#7E6148CC"]
 plot_list = [
     {
-        'path': '../results/rl/ppo_wp_v4_train_game_status_list_202403181909_{}.txt',
+        'path': '../results/rl/ppo_wp_v4_train_game_status_list_{}.txt',
         'nums': 4,
         'label': 'ppo v4 w/ pred',
         'full_label': 'PPO with prediction'
     },
     {
-        'path': '../results/rl/ppo_wop_v4_train_game_status_list_202403181809_{}.txt',
+        'path': '../results/rl/ppo_wop_v4_train_game_status_list_{}.txt',
         'nums': 4,
         'label': 'ppo v4 w/o pred',
         'full_label': 'PPO without prediction'
