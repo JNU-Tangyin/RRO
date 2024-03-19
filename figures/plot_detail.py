@@ -8,13 +8,13 @@ npg = ["#E64B35CC", "#4DBBD5CC", "#00A087CC", "#3C5488CC", "#F39B7FCC", "#8491B4
        "#7E6148CC"]
 plot_list = [
     {
-        'path': '../results/rl/ppo_wp_v4_train_game_status_list_{}.txt',
+        'path': '../results/rl/ppo_wp_v4_train_game_status_list_202403181909_{}.txt',
         'nums': 4,
         'label': 'ppo v4 w/ pred',
         'full_label': 'PPO with prediction'
     },
     {
-        'path': '../results/rl/ppo_wop_v4_train_game_status_list_{}.txt',
+        'path': '../results/rl/ppo_wop_v4_train_game_status_list_202403181809_{}.txt',
         'nums': 4,
         'label': 'ppo v4 w/o pred',
         'full_label': 'PPO without prediction'
@@ -148,5 +148,5 @@ plot_huge_car = (ggplot()
                                alpha=0.2)
                  + theme_prism()
                  )
-plot.save('../figures/rl/ppo_v4_reload_count.png')
-plot_huge_car.save('../figures/rl/ppo_v4_crane_movement_distance.png')
+plot.save('../figures/rl/ppo_v4_reload_count.pdf')
+plot_huge_car.save('../figures/rl/ppo_v4_crane_movement_distance.pdf')
