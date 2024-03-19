@@ -75,7 +75,8 @@ cd frontend && npm run dev    # start the frontend
 
 Note: the 3d environment has now been made standalone as a python module!
 
-If you want to run the pure environment without training, you can install `rro_env `from pypi [check this out on pypi.org](https://pypi.org/project/rro-env):
+A simplest way to experience the 3d container yard environment without training is to import it in your own code.
+first install `rro_env` from pypi [check this out on pypi.org](https://pypi.org/project/rro-env)
 
 ```shell
 pip install rro-env
@@ -102,6 +103,7 @@ for _ in range(Epochs):
     s = env.step(a)
     print(a)
 ```
+Enjoy!
 
 ## Citation
 
