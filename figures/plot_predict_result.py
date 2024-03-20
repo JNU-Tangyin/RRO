@@ -55,8 +55,7 @@ plot = (
     + theme(legend_position=(0.2,0.8))
 )
 
-plot.save('../figures/rl/consistency_between_predicted_and_actual_container_retrieval_sequences.pdf')
-
+##########################################
 port_svm_df['algorithm'] = ['SVR' for _ in range(len(port_svm_pre_diff_list))]
 port_lgb_df['algorithm'] = ['LightGBM' for _ in range(len(port_lgb_pre_diff_list))]
 port_bp_df['algorithm'] = ['BP' for _ in range(len(port_bp_pre_diff_list))]
@@ -74,4 +73,5 @@ compet_plot = (
     + theme(legend_position=(.2,.8))
 )
 
+plot.save('../figures/rl/consistency_between_predicted_and_actual_container_retrieval_sequences.pdf')
 compet_plot.save('../figures/rl/comparison_of_prediction_accuracy_of_different_methods.pdf')
