@@ -76,7 +76,7 @@ human_reward_df = pd.DataFrame({
 reward_df_list.append(human_reward_df)
 
 final_reward_df = pd.concat(reward_df_list)
-
+final_reward_df.to_csv('ppo_v4_reward.csv')
 plot = (ggplot()
         + geom_line(final_reward_df, aes(x='episode', y='mean reward', color='algorithm', fill='algorithm'))
         + labs(x='Episode', y='Reward')

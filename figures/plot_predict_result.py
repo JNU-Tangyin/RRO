@@ -10,15 +10,16 @@ lgb_df = pd.read_excel('../results/lgb/PRE_RESULT.xlsx', index_col=0)
 svm_df = pd.read_excel('../results/svm/PRE_RESULT.xlsx', index_col=0)
 
 unique_manifest = list(set(bp_df['PORT_MANIFEST_ID']))
+manifest_id = random.choice(unique_manifest)    
 
-manifest_id = random.choice(unique_manifest)
+# manifest_id = random.choice(bp_df['PORT_MANIFEST_ID'].unique()) # 上两句用这个替代即可
 
 port_svm_df = svm_df[svm_df['PORT_MANIFEST_ID'] == manifest_id].copy()
 port_lgb_df = lgb_df[lgb_df['PORT_MANIFEST_ID'] == manifest_id].copy()
 port_bp_df = bp_df[bp_df['PORT_MANIFEST_ID'] == manifest_id].copy()
 
 # Consistency between predicted and actual container retrieval sequences
-port_svm_pre_diff_list = list(port_svm_df['PRE_DIFF'])
+port_svm_pre_diff_list = list(port_svm_df['PRE_DIFF'])  # 没必要转换成list了吧
 port_lgb_pre_diff_list = list(port_lgb_df['PRE_DIFF'])
 port_bp_pre_diff_list = list(port_bp_df['PRE_DIFF'])
 not_sequences_list = []
@@ -42,7 +43,11 @@ not_sequences_df = pd.DataFrame({
     'episode': not_sequences_list,
     'diff': [port_svm_pre_diff_list[i] for i in not_sequences_list]
 })
+# 为什么不把3个df拼在一起呢？做图方便多了啊
+df1 = pd.concat([port_svm_df, port_svm_real_df, not_sequences_df])
 
+
+# plot
 plot = (
     ggplot()
     + geom_line(port_svm_df, aes(x='episode', y='PRE_DIFF', color='algorithm', fill='algorithm'), size = 1)
@@ -72,6 +77,8 @@ compet_plot = (
     + theme_prism()
     + theme(legend_position=(.2,.8))
 )
+
+# save
 
 plot.save('../figures/rl/consistency_between_predicted_and_actual_container_retrieval_sequences.pdf')
 compet_plot.save('../figures/rl/comparison_of_prediction_accuracy_of_different_methods.pdf')
