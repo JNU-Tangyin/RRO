@@ -66,6 +66,8 @@ port_lgb_df['algorithm'] = ['LightGBM' for _ in range(len(port_lgb_pre_diff_list
 port_bp_df['algorithm'] = ['BP' for _ in range(len(port_bp_pre_diff_list))]
 
 concat_df = pd.concat([port_svm_df, port_lgb_df, port_bp_df])
+# pd.concat([concat_df, port_svm_real_df]).to_csv('comparison_of_prediction_accuracy_of_different_methods.csv')
+concat_df.to_csv('comparison_of_prediction_accuracy_of_different_methods.csv')
 
 compet_plot = (
     ggplot()
