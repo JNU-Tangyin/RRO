@@ -109,8 +109,22 @@ Enjoy!
 
 
 ```
-Yin Tang, Zengjian Ye, Yongjian Chen, Jie Lu, Shuqiang Huang, Jian Zhang, Regulating the imbalance for the container relocation problem: A deep reinforcement learning approach, Computers & Industrial Engineering, 2024,110111, ISSN 0360-8352, https://doi.org/10.1016/j.cie.2024.110111.
+Yin Tang,
+Zengjian Ye,
+Yongjian Chen,
+Jie Lu,
+Shuqiang Huang,
+Jian Zhang,
+Regulating the imbalance for the container relocation problem: A deep reinforcement learning approach,
+Computers & Industrial Engineering,
+2024,110111,
+ISSN 0360-8352,
+https://doi.org/10.1016/j.cie.2024.110111.
 
+```
+paper
+```
+https://www.sciencedirect.com/science/article/abs/pii/S0360835224002328
 ```
 
 ## Contact
